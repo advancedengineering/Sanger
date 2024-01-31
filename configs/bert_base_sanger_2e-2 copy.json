@@ -11,5 +11,13 @@
     "num_hidden_layers": 12,
     "type_vocab_size": 2,
     "vocab_size": 30522,
-    "normalize_qk": "inner_product"
+    "normalize_qk": "inner_product",
+    "quant_qk": {
+      "method": "sym",
+      "bitwidth": 4
+    },
+    "prune_score": {
+      "method": "probablity_threshold",
+      "threshold": 2e-2
+    }
   }

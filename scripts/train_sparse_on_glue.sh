@@ -4,7 +4,7 @@ export CONFIG_ROOT=$PROJ_ROOT/configs
 task_name=${1:-"mrpc"}
 model_name=${2:-"bert-base-uncased"}
 model_config=${3:-"bert_base_sanger_2e-2.json"}
-num_train_epochs=${4:-"3"}
+num_train_epochs=${4:-"100"}
 learning_rate=${5:-"2e-5"}
 batch_size=${6:-"32"}
 output_dir=${7:-"$PROJ_ROOT/outputs/glue"}
@@ -19,4 +19,5 @@ python run_glue.py \
     --per_device_train_batch_size $batch_size \
     --learning_rate $learning_rate \
     --num_train_epochs $num_train_epochs \
+    --overwrite_output_dir \
     --output_dir $output_dir/sparse-$(basename $model_name)_$task_name/

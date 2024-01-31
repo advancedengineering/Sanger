@@ -214,6 +214,25 @@ class BertEmbeddings(nn.Module):
         embeddings = self.dropout(embeddings)
         return embeddings
 
+class Constantmax(nn.Module):
+    """ Constant learnable parameters for xmax and denominator """
+    def __init__(self, dim=-1):
+        super().__init__()
+        constantmax_initial_beta: float = 0.5 # denominator to utilize for Constantmax
+        constantmax_initial_gamma: float = 100.0 # denominator to utilize for Constantmax
+        # learnable 'xmax' - beta
+        self.beta = nn.Parameter(torch.Tensor([constantmax_initial_beta]))
+
+        # denominator - gamma
+        self.gamma = nn.Parameter(torch.Tensor([constantmax_initial_gamma]))
+
+        # Set the base of the exponent
+        self.constantmax_base = math.e
+
+    def forward(self, x):
+        x = x - self.beta
+        e_x = torch.pow(self.constantmax_base, x)
+        return e_x / self.gamma
 
 class BertSelfAttention(nn.Module):
     def __init__(self, config):
@@ -229,6 +248,8 @@ class BertSelfAttention(nn.Module):
         self.query = nn.Linear(config.hidden_size, self.all_head_size)
         self.key = nn.Linear(config.hidden_size, self.all_head_size)
         self.value = nn.Linear(config.hidden_size, self.all_head_size)
+
+        self.consmax=Constantmax()
 
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
         
@@ -276,7 +297,8 @@ class BertSelfAttention(nn.Module):
 
         attention_scores = torch.matmul(query_layer, key_layer)
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-
+        print('********************************')
+        print(do_quant)
         if do_quant:
             quant_attention_scores = quant_qk_matmul(query_layer, key_layer, self.config, self.quant_matmul)
             quant_attention_scores = quant_attention_scores / math.sqrt(self.attention_head_size)
@@ -349,8 +371,10 @@ class BertSelfAttention(nn.Module):
         # else:
         #     # Normalize the attention scores to probabilities.
         #     attention_probs = F.softmax(attention_scores, dim=-1)
-        attention_probs = F.softmax(attention_scores, dim=-1)
-
+        
+        #tgc
+        #attention_probs = F.softmax(attention_scores, dim=-1)
+        attention_probs = self.consmax(attention_scores)
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
         attention_probs = self.dropout(attention_probs)

@@ -11,8 +11,10 @@ python run_glue.py \
     --task_name $task_name \
     --do_train \
     --do_eval \
-    --max_seq_length 128 \
+    --max_seq_length 256 \
+    --pad_to_max_length \
     --per_device_train_batch_size $batch_size \
     --learning_rate $learning_rate \
     --num_train_epochs $num_train_epochs \
+    --overwrite_output_dir \
     --output_dir $output_dir/$(basename $model_name)_$task_name/
